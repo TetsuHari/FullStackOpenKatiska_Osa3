@@ -1,5 +1,5 @@
 import axios from 'axios'
-const baseUrl = 'http://localhost:3001/persons'
+const baseUrl = 'api/persons'
 
 const extractData = response => response.data
 const idUrl = (id) => `${baseUrl}/${id}`

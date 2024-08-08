@@ -15,6 +15,7 @@ const Person = ({name, number, remover}) => {
 }
   
 const PhoneBook = ({persons, filter, personRemover}) => {
+    console.log(persons)
     let filteredPersons = persons.filter(person => 
       person.name.toLowerCase().includes(filter.toLowerCase()))
     return (
@@ -23,7 +24,7 @@ const PhoneBook = ({persons, filter, personRemover}) => {
         <table>
           <tbody>
             {filteredPersons.map((person) =>
-              <Person key={person.id}
+              <Person key={person}
                       name={person.name}
                       number={person.number}
                       remover={personRemover(person.id)}

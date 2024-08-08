@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 
 import { AddNewPersonForm, FilterForm } from './components/Forms'
 import NotificationBar from './components/NotificationsBar'
@@ -73,9 +72,9 @@ const App = () => {
     return () => {
       if (window.confirm(`Do you really want to delete ${person.name}`)) {
         personService.remove(personId)
-          .then(deletedPerson => {
-            setPersons(persons.filter(p => p.id !== deletedPerson.id))
-            informUser(`Deleted ${deletedPerson.name}`, false)
+          .then(() => {
+            setPersons(persons.filter(p => p.id !== person.id))
+            informUser(`Deleted ${person.name}`, false)
           })
       }
     }
