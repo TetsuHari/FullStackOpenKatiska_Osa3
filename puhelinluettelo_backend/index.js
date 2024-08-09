@@ -1,6 +1,9 @@
+require('dotenv').config()
+
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
+const Person = require('./models/person')
 
 const app = express()
 
@@ -34,67 +37,98 @@ const morganFormatFunction = (tokens, req, res) => {
 }
 
 app.use(cors())
+app.use(express.static('dist'))
 app.use(express.json())
 app.use(morgan(morganFormatFunction))
-app.use(express.static('dist'))
 
-app.get('/api/persons', (req, resp) => {
-    resp.json(phoneBook)
+app.get('/api/persons', (req, resp, next) => {
+    Person.find({}).then(persons => {
+        resp.json(persons)
+    })
+    .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (req, resp) => {
-    const id = req.params.id
-    const person = phoneBook.find(p => p.id === id)
-    if(person) {
-        resp.json(person)
-    } else {
-        resp.status(404).send({ error: 'No person with that id found' })
-    }
+app.get('/api/persons/:id', (req, resp, next) => {
+    Person.findById(req.params.id).then(person => {
+        if (person) {
+            resp.json(person)
+        } else {
+            response.status(404).send({ error: 'No person with that id found' })
+        }
+    })
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, resp) => {
-    const id = req.params.id
-    console.log(`Delete person id: ${typeof(id)}`)
-    phoneBook = phoneBook.filter(p => p.id !== id)
-    console.log(phoneBook)
-    
-    resp.status(204).send()
-    
+app.delete('/api/persons/:id', (req, resp, next) => {
+    Person.findByIdAndDelete(req.params.id)
+        .then(dbResult => {
+            resp.status(204).end()
+        })
+        .catch(error => next(error))    
 })
 
-app.post('/api/persons', (req, resp) => {
+app.put('/api/persons/:id', (req, resp, next) => {
     const reqPerson = req.body
 
-    if (!reqPerson.name || !reqPerson.number) {
-        return resp.status(400).send({error: 'Missing name and/or number' })
-    }
 
-    if (phoneBook.map(p => p.name).includes(reqPerson.name)) {
-        return resp.status(400).send({ error: 'Name present in the phonebook' })
-    }
-
-    const current_ids = phoneBook.map(p => p.id)
-    console.log(current_ids)
-    let newId = '0'
-
-    while (current_ids.includes(newId)) {
-        newId = String.toString(Math.floor(Math.random() * 10000))
-    }
-
-    const newPerson = { ...reqPerson, id: newId }
-
-    phoneBook = phoneBook.concat(newPerson)
-
-    resp.json(newPerson)
+    Person.findByIdAndUpdate(
+        reqPerson.id,
+        reqPerson,
+        { new: true, runValidators: true, context: 'query' }
+    )
+        .then(updatedPerson => {
+            resp.json(updatedPerson)
+        })
+        .catch(error => next(error))
 })
 
-app.get('/info', (req, resp) => {
-    const html = `
-        <p>Phonebook has info for ${phoneBook.lenght} people</p>
-        <p>${Date()}</p>
-    `
-    resp.send(html)
+app.post('/api/persons', (req, resp, next) => {
+    const reqPerson = req.body
+
+    const newPerson = Person({name: reqPerson.name, number: reqPerson.number})
+
+    newPerson.save()
+        .then(addedPerson => {
+            resp.json(addedPerson)
+        })
+        .catch(error => next(error))
 })
+
+
+
+app.get('/info', (req, resp, next) => {
+
+    Person.find({}).then(personList => {
+        const html = `
+            <p>Phonebook has info for ${personList.length} people</p>
+            <p>${Date()}</p>
+        `
+
+        resp.send(html)
+    })
+    .catch(error => next(error))
+
+})
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+}
+  
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+    console.log(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'Malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 

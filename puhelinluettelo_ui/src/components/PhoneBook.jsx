@@ -15,7 +15,6 @@ const Person = ({name, number, remover}) => {
 }
   
 const PhoneBook = ({persons, filter, personRemover}) => {
-    console.log(persons)
     let filteredPersons = persons.filter(person => 
       person.name.toLowerCase().includes(filter.toLowerCase()))
     return (

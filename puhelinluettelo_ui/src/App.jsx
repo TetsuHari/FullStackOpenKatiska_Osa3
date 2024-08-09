@@ -40,9 +40,13 @@ const App = () => {
             setPersons(persons.map(original => updated.id === original.id ? updated : original))
             informUser(`${person.name} number updated`, false)
           })
-          .catch(_ => {
-            informUser(`It seems the person has been removed from the server, can't change number`, true)
-            setPersons(persons.filter(p => p.id !== person.id))
+          .catch(error => {
+            if (error.response) {
+              informUser(error.response.body.error, true)
+            } else {
+              informUser("It seems the person has been already removed from the server, can't update", true)
+              setPersons(persons.filter(p => p.id !== person.id))
+            }
           })
       } else {
         setNewName('')
@@ -52,9 +56,14 @@ const App = () => {
       let newPerson = {name: newName, number: newNumber}
       personService.create(newPerson)
         .then(person => {
+          informUser(`${person.name} added to phonebook!`, false)
           setPersons(persons.concat(person))
           setNewName('')
           setNewNumber('')
+        })
+        .catch(error => {
+          console.log("New person error: ", error.response.data.error)
+          informUser(error.response.data.error, true)
         })
     }
   }
