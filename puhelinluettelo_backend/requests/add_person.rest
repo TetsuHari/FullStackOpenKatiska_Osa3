@@ -3,5 +3,5 @@ Content-Type: application/json
 
 {
     "name": "James bond",
-    "number": "555-123123"
+    "number": "555-123123",
 }

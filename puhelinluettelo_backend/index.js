@@ -8,19 +8,6 @@ const Person = require('./models/person')
 const app = express()
 
 
-var phoneBook = [
-    {
-        id: "1",
-        name: "Arto Hellas",
-        number: "1123142341"
-    },
-    {
-        id: "2",
-        name: "Ada Lovelace",
-        number: "555-555-555"
-    }
-]
-
 morgan.token('mPostContent', (req, resp) => {
     return JSON.stringify(req.body)
 })
@@ -45,7 +32,7 @@ app.get('/api/persons', (req, resp, next) => {
     Person.find({}).then(persons => {
         resp.json(persons)
     })
-    .catch(error => next(error))
+        .catch(error => next(error))
 })
 
 app.get('/api/persons/:id', (req, resp, next) => {
@@ -53,18 +40,18 @@ app.get('/api/persons/:id', (req, resp, next) => {
         if (person) {
             resp.json(person)
         } else {
-            response.status(404).send({ error: 'No person with that id found' })
+            resp.status(404).send({ error: 'No person with that id found' })
         }
     })
-    .catch(error => next(error))
+        .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (req, resp, next) => {
     Person.findByIdAndDelete(req.params.id)
-        .then(dbResult => {
+        .then(dbResp => {
             resp.status(204).end()
         })
-        .catch(error => next(error))    
+        .catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (req, resp, next) => {
@@ -85,7 +72,7 @@ app.put('/api/persons/:id', (req, resp, next) => {
 app.post('/api/persons', (req, resp, next) => {
     const reqPerson = req.body
 
-    const newPerson = Person({name: reqPerson.name, number: reqPerson.number})
+    const newPerson = Person({ name: reqPerson.name, number: reqPerson.number })
 
     newPerson.save()
         .then(addedPerson => {
@@ -96,7 +83,7 @@ app.post('/api/persons', (req, resp, next) => {
 
 
 
-app.get('/info', (req, resp, next) => {
+app.get('/info', (_, resp, next) => {
 
     Person.find({}).then(personList => {
         const html = `
@@ -106,17 +93,17 @@ app.get('/info', (req, resp, next) => {
 
         resp.send(html)
     })
-    .catch(error => next(error))
+        .catch(error => next(error))
 
 })
 
-const unknownEndpoint = (request, response) => {
+const unknownEndpoint = (_, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
 }
-  
+
 app.use(unknownEndpoint)
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, _, response, next) => {
     console.log(error.message)
 
     if (error.name === 'CastError') {
@@ -134,4 +121,4 @@ const PORT = process.env.PORT || 3001
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
-  })
+})
